@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  
+  --color-paper: #040404;
+  --color-ink: #d9d3c6;
+  --color-muted: #9f9688;
+  --color-line: #171717;
+  --color-accent: #ff3827;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: auto !important;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased overflow-x-hidden;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  a,
+  button {
+    @apply transition-colors duration-300;
+  }
+}
+
+.site-shell {
+  width: min(2200px, 92vw);
+  margin-inline: auto;
+}
+
+@media (min-width: 1920px) {
+  .site-shell {
+    width: min(2320px, 94vw);
+  }
+}
+
+/* Denton-style Grid Lines */
+.grid-border-r { @apply border-r border-line; }
+.grid-border-l { @apply border-l border-line; }
+.grid-border-t { @apply border-t border-line; }
+.grid-border-b { @apply border-b border-line; }
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Responsive Grid Adjustments */
+@media (max-width: 1024px) {
+  .grid-border-r, .grid-border-l { border-right: none; border-left: none; }
+}
+
+.text-reveal {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Hide scrollbar but keep functionality */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
