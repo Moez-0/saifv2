@@ -42,7 +42,7 @@ export default function JournalismWorkPage() {
         <div>
           <p className="text-[10px] font-sans font-bold uppercase tracking-widest text-muted">Work Page</p>
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold uppercase tracking-tight">Journalism Work</h1>
-          <p className="text-sm font-sans text-ink/70 mt-3 max-w-xl">Reporting, interviews, and multimedia storytelling with editorial depth.</p>
+          <p className="text-sm font-sans italic text-ink/70 mt-3 max-w-xl">Reporting, interviews, and multimedia storytelling with editorial depth.</p>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ export default function JournalismWorkPage() {
               <span>{item.year}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-6xl font-serif font-bold uppercase tracking-[-0.03em] leading-[0.95] lg:leading-[0.92] mb-4 break-words">{item.title}</h2>
-            <p className="text-base font-serif text-ink/80 leading-relaxed mb-5 max-w-3xl">{item.summary}</p>
+            <p className="text-base font-serif italic text-ink/80 leading-relaxed mb-5 max-w-3xl">{item.summary}</p>
             {item.href && (
               <a
                 href={item.href}

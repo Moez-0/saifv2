@@ -15,7 +15,7 @@ export default function WorkExperiencePage() {
         <div>
           <p className="text-[10px] font-sans font-bold uppercase tracking-widest text-muted">Work Page</p>
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold uppercase tracking-tight">Work Experience</h1>
-          <p className="text-sm font-sans text-ink/70 mt-3 max-w-xl">Career journey across media, marketing, and storytelling operations.</p>
+          <p className="text-sm font-sans italic text-ink/70 mt-3 max-w-xl">Career journey across media, marketing, and storytelling operations.</p>
         </div>
       </div>
 

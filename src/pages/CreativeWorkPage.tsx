@@ -15,7 +15,7 @@ export default function CreativeWorkPage() {
         <div>
           <p className="text-[10px] font-sans font-bold uppercase tracking-widest text-muted">Work Page</p>
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold uppercase tracking-tight">Creative Work</h1>
-          <p className="text-sm font-sans text-ink/70 mt-3 max-w-xl">Selected film and visual storytelling pieces built for audience impact.</p>
+          <p className="text-sm font-sans italic text-ink/70 mt-3 max-w-xl">Selected film and visual storytelling pieces built for audience impact.</p>
         </div>
       </div>
 
@@ -34,7 +34,7 @@ export default function CreativeWorkPage() {
                 <span>{project.year}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold uppercase tracking-tight leading-[0.95] lg:leading-[0.92] break-words">{project.title}</h2>
-              <p className="text-sm font-sans text-ink/80 leading-relaxed">{project.description}</p>
+              <p className="text-sm font-sans italic text-ink/80 leading-relaxed">{project.description}</p>
               {project.link && (
                 <a
                   href={project.link}

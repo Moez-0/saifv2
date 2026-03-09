@@ -9,12 +9,24 @@ import WorkExperiencePage from "./pages/WorkExperiencePage";
 
 const FONT_OPTIONS = [
   { key: "default", label: "Current", className: "font-theme-default" },
-  { key: "nicholas", label: "Nicholas", className: "font-theme-nicholas" },
-  { key: "sakire", label: "Sakire", className: "font-theme-sakire" },
 ] as const;
 
 type FontOption = (typeof FONT_OPTIONS)[number];
 type FontKey = FontOption["key"];
+const SPLASH_SESSION_KEY = "saif-portfolio-splash-seen";
+
+const PRELUDE_DELAY_MS = 1000;
+const CAMERA_UI_DELAY_MS = 1600;
+const VIDEO_DELAY_MS = 2200;
+const SPLASH_MEDIA = {
+  video: "/media/intro-cinematic.mp4",
+  boot: "/media/camera-boot.mp3",
+  shutter: "/media/camera-shutter.mp3",
+  ambient: "/media/ambient-doc.mp3",
+} as const;
+
+const NAME_REVEAL_MS = 3600;
+const ENTER_REVEAL_MS = NAME_REVEAL_MS + 650;
 
 const ScrollToTop = () => {
   const location = useLocation();
@@ -40,74 +52,348 @@ const ScrollToTop = () => {
 
 const SPLASH_NAME = "Saifeddine Lahmar";
 
-const SplashScreen = ({ visible }: { visible: boolean }) => (
-  <AnimatePresence>
-    {visible && (
-      <motion.div
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-0 z-[120] bg-paper overflow-hidden flex items-center justify-center"
-      >
-        <motion.div
-          initial={{ scale: 1.2, opacity: 0.2 }}
-          animate={{ scale: 1, opacity: 0.5 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,56,39,0.18),transparent_42%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.08),transparent_48%)]"
-        />
+const SplashScreen = ({ visible, onComplete }: { visible: boolean; onComplete: () => void }) => {
+  const [elapsed, setElapsed] = useState(0);
+  const [isExiting, setIsExiting] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          exit={{ scaleX: 0 }}
-          transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute bottom-0 left-0 h-[3px] w-full bg-accent origin-left"
-        />
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const ambientSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const ambientGainRef = useRef<GainNode | null>(null);
+  const bootAudioRef = useRef<HTMLAudioElement | null>(null);
+  const shutterAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  const showGrain = elapsed >= PRELUDE_DELAY_MS;
+  const showCameraUi = elapsed >= CAMERA_UI_DELAY_MS;
+  const showVideo = elapsed >= VIDEO_DELAY_MS;
+  const showName = elapsed >= NAME_REVEAL_MS;
+  const showEnter = elapsed >= ENTER_REVEAL_MS;
+
+  const ensureAudioContext = () => {
+    if (typeof window === "undefined") return null;
+    if (audioContextRef.current) return audioContextRef.current;
+    const context = new window.AudioContext();
+    audioContextRef.current = context;
+    return context;
+  };
+
+  const playBootFallback = () => {
+    const context = ensureAudioContext();
+    if (!context) return;
+    const now = context.currentTime;
+    const osc = context.createOscillator();
+    const gain = context.createGain();
+    const filter = context.createBiquadFilter();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(90, now);
+    osc.frequency.exponentialRampToValueAtTime(380, now + 0.34);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(680, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.06, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+    osc.connect(filter).connect(gain).connect(context.destination);
+    osc.start(now);
+    osc.stop(now + 0.45);
+  };
+
+  const playShutterFallback = () => {
+    const context = ensureAudioContext();
+    if (!context) return;
+    const now = context.currentTime;
+
+    const osc = context.createOscillator();
+    const oscGain = context.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(240, now);
+    osc.frequency.exponentialRampToValueAtTime(60, now + 0.18);
+    oscGain.gain.setValueAtTime(0.0001, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.045, now + 0.01);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+    osc.connect(oscGain).connect(context.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+
+    const noiseBuffer = context.createBuffer(1, context.sampleRate * 0.16, context.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let index = 0; index < output.length; index += 1) {
+      output[index] = (Math.random() * 2 - 1) * 0.28;
+    }
+    const noise = context.createBufferSource();
+    const band = context.createBiquadFilter();
+    const noiseGain = context.createGain();
+    band.type = "bandpass";
+    band.frequency.setValueAtTime(1200, now);
+    noiseGain.gain.setValueAtTime(0.0001, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.04, now + 0.008);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    noise.buffer = noiseBuffer;
+    noise.connect(band).connect(noiseGain).connect(context.destination);
+    noise.start(now);
+    noise.stop(now + 0.18);
+  };
+
+  const playRealSound = (audioRef: { current: HTMLAudioElement | null }, volume: number, loop = false) => {
+    const audio = audioRef.current;
+    if (!audio) return false;
+    audio.loop = loop;
+    audio.volume = volume;
+    audio.currentTime = 0;
+    audio.play().catch(() => undefined);
+    return true;
+  };
+
+  const playBootSound = () => {
+    const playedReal = playRealSound(bootAudioRef, 0.28);
+    if (!playedReal) {
+      playBootFallback();
+    }
+  };
+
+  const playShutterSound = () => {
+    const playedReal = playRealSound(shutterAudioRef, 0.5);
+    if (!playedReal) {
+      playShutterFallback();
+    }
+  };
+
+  const startAmbient = () => {
+    const ambientAudio = ambientAudioRef.current;
+    if (ambientAudio) {
+      ambientAudio.loop = true;
+      ambientAudio.volume = 0.045;
+      ambientAudio.play().catch(() => undefined);
+      return;
+    }
+
+    const context = ensureAudioContext();
+    if (!context || ambientSourceRef.current) return;
+
+    const length = context.sampleRate * 2;
+    const buffer = context.createBuffer(1, length, context.sampleRate);
+    const channel = buffer.getChannelData(0);
+
+    for (let index = 0; index < length; index += 1) {
+      channel[index] = (Math.random() * 2 - 1) * 0.09;
+    }
+
+    const source = context.createBufferSource();
+    const lowpass = context.createBiquadFilter();
+    const gain = context.createGain();
+
+    source.buffer = buffer;
+    source.loop = true;
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = 240;
+    gain.gain.value = 0.008;
+
+    source.connect(lowpass).connect(gain).connect(context.destination);
+    source.start();
+
+    ambientSourceRef.current = source;
+    ambientGainRef.current = gain;
+  };
+
+  const stopAmbient = () => {
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.pause();
+      ambientAudioRef.current.currentTime = 0;
+    }
+    ambientSourceRef.current?.stop();
+    ambientSourceRef.current?.disconnect();
+    ambientGainRef.current?.disconnect();
+    ambientSourceRef.current = null;
+    ambientGainRef.current = null;
+  };
+
+  const completeSplash = () => {
+    if (isExiting) return;
+    setIsExiting(true);
+    playShutterSound();
+    stopAmbient();
+    window.setTimeout(() => {
+      onComplete();
+    }, 760);
+  };
+
+  useEffect(() => {
+    if (!visible) return;
+    const start = performance.now();
+
+    const loop = window.setInterval(() => {
+      setElapsed(Math.max(0, performance.now() - start));
+    }, 33);
+
+    return () => window.clearInterval(loop);
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || elapsed < PRELUDE_DELAY_MS || elapsed > PRELUDE_DELAY_MS + 80) return;
+    ensureAudioContext()?.resume().catch(() => undefined);
+    playBootSound();
+  }, [visible, elapsed]);
+
+  useEffect(() => {
+    if (!visible || elapsed < VIDEO_DELAY_MS || elapsed > VIDEO_DELAY_MS + 80) return;
+    startAmbient();
+  }, [visible, elapsed]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        completeSplash();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [visible, isExiting]);
+
+  useEffect(() => {
+    return () => {
+      stopAmbient();
+      audioContextRef.current?.close().catch(() => undefined);
+      audioContextRef.current = null;
+    };
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {visible && (
         <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -16, scale: 1.02 }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center px-6"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          onClick={completeSplash}
+          className="fixed inset-0 z-[120] overflow-hidden bg-black text-ink"
+          role="button"
+          tabIndex={0}
+          aria-label="Skip intro"
         >
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ delay: 0.1, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[10px] font-sans font-bold uppercase tracking-[0.35em] text-muted mb-3"
-          >
-            Portfolio
-          </motion.p>
+          <audio ref={bootAudioRef} preload="auto" src={SPLASH_MEDIA.boot} />
+          <audio ref={shutterAudioRef} preload="auto" src={SPLASH_MEDIA.shutter} />
+          <audio ref={ambientAudioRef} preload="metadata" src={SPLASH_MEDIA.ambient} />
 
-          <div className="overflow-hidden">
-            <h1 className="text-5xl sm:text-6xl lg:text-8xl font-serif font-bold uppercase tracking-[-0.04em] leading-[0.9] text-ink">
-              {SPLASH_NAME.split("").map((char, index) => (
-                <motion.span
-                  key={`${char}-${index}`}
-                  initial={{ y: "120%", opacity: 0 }}
-                  animate={{ y: "0%", opacity: 1 }}
-                  exit={{ y: "-120%", opacity: 0 }}
-                  transition={{
-                    delay: 0.18 + index * 0.025,
-                    duration: 0.52,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="inline-block"
-                >
-                  {char === " " ? "\u00A0" : char}
-                </motion.span>
-              ))}
-            </h1>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: showVideo && !videoError ? 1 : 0 }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0"
+          >
+            {!videoError ? (
+              <motion.video
+                className="h-full w-full object-cover"
+                autoPlay
+                muted
+                playsInline
+                loop
+                preload="none"
+                poster="/hero-image.jpg"
+                onError={() => setVideoError(true)}
+                initial={{ scale: 1.06 }}
+                animate={{ scale: 1.14 }}
+                transition={{ duration: 14, ease: "linear" }}
+              >
+                <source src={SPLASH_MEDIA.video} type="video/mp4" />
+              </motion.video>
+            ) : (
+              <img src="/hero-image.jpg" alt="Cinematic fallback" className="h-full w-full object-cover opacity-55" />
+            )}
+          </motion.div>
+
+          <div className="cinematic-vignette pointer-events-none absolute inset-0" />
+          <div className="cinematic-soft-light pointer-events-none absolute inset-0" />
+          {showGrain && <div className="cinematic-grain pointer-events-none absolute inset-0 opacity-50" />}
+
+          {showCameraUi && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="pointer-events-none absolute inset-0"
+            >
+              <div className="absolute inset-6 border border-white/10 md:inset-10" />
+              <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/10" />
+              <div className="absolute top-1/2 left-0 h-px w-full -translate-y-1/2 bg-white/10" />
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0.25 }}
+                animate={{ scale: [0.8, 1.03, 0.95, 1], opacity: [0.3, 0.7, 0.45, 0.6] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25"
+              />
+              <div className="absolute left-5 top-5 flex items-center gap-3 text-[11px] font-sans uppercase tracking-[0.28em] text-white/75 sm:left-8 sm:top-7">
+                <span className="flex items-center gap-2 text-accent">
+                  <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_10px_rgba(255,56,39,0.95)]" /> REC
+                </span>
+                <span>00:00:01</span>
+              </div>
+            </motion.div>
+          )}
+
+          <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+            <div className="max-w-3xl">
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={showName ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <h1 className="text-4xl font-serif font-bold uppercase tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
+                  {SPLASH_NAME}
+                </h1>
+              </motion.div>
+
+              <motion.button
+                type="button"
+                initial={{ opacity: 0, y: 12 }}
+                animate={showEnter ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  completeSplash();
+                }}
+                className="mt-10 border-b border-white/75 pb-1 text-sm font-sans uppercase tracking-[0.22em] text-white hover:text-accent hover:border-accent transition-colors"
+              >
+                Enter Portfolio →
+              </motion.button>
+            </div>
           </div>
+
+          <AnimatePresence>
+            {showName && !isExiting && elapsed < NAME_REVEAL_MS + 1100 && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0.85 }}
+                animate={{ scale: 2.2, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.85, ease: [0.55, 0, 0.15, 1] }}
+                className="pointer-events-none absolute inset-0 m-auto h-[130vmax] w-[130vmax] rounded-full border border-white/20"
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isExiting && (
+              <motion.div
+                initial={{ clipPath: "circle(120% at 50% 50%)", opacity: 0 }}
+                animate={{ clipPath: "circle(0% at 50% 50%)", opacity: 1 }}
+                exit={{ opacity: 1 }}
+                transition={{ duration: 0.72, ease: [0.7, 0, 0.3, 1] }}
+                className="pointer-events-none absolute inset-0 bg-black"
+              />
+            )}
+          </AnimatePresence>
         </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
+      )}
+    </AnimatePresence>
+  );
+};
 
 const WORK_LINKS = [
   {
@@ -145,9 +431,8 @@ const LOGOS = [
 
 const LOGO_LOOP = [...LOGOS, ...LOGOS, ...LOGOS];
 
-const Header = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchFont: () => void }) => {
+const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const activeLabel = FONT_OPTIONS.find((font) => font.key === activeFont)?.label ?? "Current";
 
   return (
     <header className="fixed top-0 left-0 w-full z-50">
@@ -156,13 +441,6 @@ const Header = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchFon
           Saifeddine Lahmar
         </Link>
         <div className="flex items-center gap-3">
-          <button
-            onClick={onSwitchFont}
-            className="px-3 py-1.5 border border-white/45 text-xs font-sans font-bold uppercase tracking-[0.18em] hover:border-accent hover:text-accent transition-colors"
-            aria-label="Switch portfolio font"
-          >
-            {activeLabel}
-          </button>
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="text-accent hover:opacity-80 transition-all duration-300 transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-paper rounded-full"
@@ -259,15 +537,15 @@ const Footer = () => (
   </footer>
 );
 
-const HomePage = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchFont: () => void }) => (
+const HomePage = () => (
   <>
-    <Header activeFont={activeFont} onSwitchFont={onSwitchFont} />
+    <Header />
     <Hero />
 
     <main className="site-shell py-12 sm:py-14 lg:py-20 space-y-14 sm:space-y-18 lg:space-y-24">
       <section id="intro" className="pt-2">
         <p className="text-xs sm:text-sm font-sans font-bold uppercase tracking-[0.18em] text-muted mb-8">Intro</p>
-        <p className="max-w-5xl text-xl sm:text-2xl lg:text-[2.15rem] font-serif leading-[1.3] lg:leading-[1.25] text-ink/90">
+        <p className="max-w-5xl text-xl sm:text-2xl lg:text-[2.15rem] font-serif italic leading-[1.3] lg:leading-[1.25] text-ink/90">
           I am a multidisciplinary storyteller focused on building meaningful media across film, journalism, and digital campaigns. I blend sharp reporting instincts with cinematic direction to help brands and communities communicate with clarity, purpose, and cultural relevance. From producing interviews with global leaders to directing audience-focused visuals, I create stories that move people and deliver measurable impact. I thrive in collaborative teams, adapt quickly to new contexts, and bring strong execution from concept to final delivery. Guided by curiosity and responsibility, I keep shaping narratives that inform, inspire, and open space for dialogue across diverse audiences worldwide every single day.
         </p>
       </section>
@@ -308,7 +586,7 @@ const HomePage = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchF
                 <div className="max-w-3xl">
                   <p className="text-[10px] font-sans font-bold uppercase tracking-widest text-muted mb-3">0{index + 1}</p>
                   <h2 className="text-3xl sm:text-4xl lg:text-7xl font-serif font-bold uppercase tracking-[-0.03em] leading-[0.92] lg:leading-[0.9] mb-3 break-words">{item.title}</h2>
-                  <p className="text-sm lg:text-base font-sans text-ink/70 leading-relaxed">{item.description}</p>
+                  <p className="text-sm lg:text-base font-sans italic text-ink/70 leading-relaxed">{item.description}</p>
                 </div>
                 <ArrowUpRight size={20} className="text-accent mt-2 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
@@ -321,7 +599,7 @@ const HomePage = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchF
         <p className="text-xs sm:text-sm font-sans font-bold uppercase tracking-[0.18em] text-muted mb-8">Achievements & Awards</p>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
           {AWARDS.map((award) => (
-              <li key={award} className="text-base lg:text-lg font-serif text-ink/85 leading-relaxed break-words">
+              <li key={award} className="text-base lg:text-lg font-serif italic text-ink/85 leading-relaxed break-words">
                 {award}
               </li>
           ))}
@@ -375,8 +653,7 @@ const HomePage = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchF
 export default function App() {
   const location = useLocation();
   const lenisRef = useRef<Lenis | null>(null);
-  const [showSplash, setShowSplash] = useState(true);
-  const [activeFont, setActiveFont] = useState<FontKey>("default");
+  const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -410,30 +687,26 @@ export default function App() {
   }, [location.key]);
 
   useEffect(() => {
-    setShowSplash(true);
-    const timeoutId = window.setTimeout(() => {
-      setShowSplash(false);
-    }, 1600);
+    if (typeof window === "undefined") return;
+    const splashSeen = window.sessionStorage.getItem(SPLASH_SESSION_KEY);
+    setShowSplash(!splashSeen);
+  }, []);
 
-    return () => window.clearTimeout(timeoutId);
-  }, [location.pathname]);
-
-  const switchFont = () => {
-    setActiveFont((current) => {
-      const currentIndex = FONT_OPTIONS.findIndex((font) => font.key === current);
-      const nextIndex = (currentIndex + 1) % FONT_OPTIONS.length;
-      return FONT_OPTIONS[nextIndex].key;
-    });
+  const handleSplashComplete = () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(SPLASH_SESSION_KEY, "true");
+    }
+    setShowSplash(false);
   };
 
   return (
-    <div className={`min-h-screen bg-paper text-ink selection:bg-accent selection:text-white relative ${FONT_OPTIONS.find((font) => font.key === activeFont)?.className ?? "font-theme-default"}`}>
+    <div className="min-h-screen bg-paper text-ink selection:bg-accent selection:text-white relative font-theme-default">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,56,39,0.08),transparent_36%),radial-gradient(circle_at_85%_90%,rgba(255,255,255,0.04),transparent_30%)]" />
-      <SplashScreen visible={showSplash} />
+      <SplashScreen visible={showSplash} onComplete={handleSplashComplete} />
       <div className="relative z-10">
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<HomePage activeFont={activeFont} onSwitchFont={switchFont} />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/creative-work" element={<CreativeWorkPage />} />
           <Route path="/journalism-work" element={<JournalismWorkPage />} />
           <Route path="/work-experience" element={<WorkExperiencePage />} />

@@ -1,22 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Nicholas";
-  src: url('/fonts/Nicholas.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Sakire";
-  src: url('/fonts/Sakire.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Denton Text", "Denton", "Iowan Old Style", "Times New Roman", serif;
@@ -94,19 +78,44 @@
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
+.cinematic-vignette {
+  background: radial-gradient(circle at center, rgba(4, 4, 4, 0.15) 26%, rgba(4, 4, 4, 0.7) 72%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+.cinematic-soft-light {
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.1), transparent 48%);
+}
+
+.cinematic-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  mix-blend-mode: soft-light;
+  animation: grain-shift 0.22s steps(2) infinite;
+}
+
+.cinematic-cursor {
+  animation: cursor-blink 0.85s steps(1) infinite;
+}
+
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-1%, 1%); }
+  40% { transform: translate(1%, -1%); }
+  60% { transform: translate(1%, 1%); }
+  80% { transform: translate(-1%, -1%); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes cursor-blink {
+  0%,
+  45% { opacity: 1; }
+  50%,
+  100% { opacity: 0; }
+}
+
 .font-theme-default {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Denton Text", "Denton", "Iowan Old Style", "Times New Roman", serif;
-}
-
-.font-theme-nicholas {
-  --font-sans: "Nicholas", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Nicholas", "Denton Text", "Denton", "Iowan Old Style", "Times New Roman", serif;
-}
-
-.font-theme-sakire {
-  --font-sans: "Sakire", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Sakire", "Denton Text", "Denton", "Iowan Old Style", "Times New Roman", serif;
 }
 
 /* Hide scrollbar but keep functionality */
