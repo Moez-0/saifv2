@@ -7,6 +7,15 @@ import CreativeWorkPage from "./pages/CreativeWorkPage";
 import JournalismWorkPage from "./pages/JournalismWorkPage";
 import WorkExperiencePage from "./pages/WorkExperiencePage";
 
+const FONT_OPTIONS = [
+  { key: "default", label: "Current", className: "font-theme-default" },
+  { key: "nicholas", label: "Nicholas", className: "font-theme-nicholas" },
+  { key: "sakire", label: "Sakire", className: "font-theme-sakire" },
+] as const;
+
+type FontOption = (typeof FONT_OPTIONS)[number];
+type FontKey = FontOption["key"];
+
 const ScrollToTop = () => {
   const location = useLocation();
 
@@ -136,22 +145,32 @@ const LOGOS = [
 
 const LOGO_LOOP = [...LOGOS, ...LOGOS, ...LOGOS];
 
-const Header = () => {
+const Header = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchFont: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const activeLabel = FONT_OPTIONS.find((font) => font.key === activeFont)?.label ?? "Current";
 
   return (
     <header className="fixed top-0 left-0 w-full z-50">
       <div className="site-shell relative z-[60] flex justify-between items-center py-5 lg:py-8 2xl:py-10 mix-blend-difference text-white">
-        <Link to="/" className="text-[9px] sm:text-[10px] font-sans font-bold tracking-[0.22em] sm:tracking-[0.3em] uppercase pr-4">
+        <Link to="/" className="text-xs sm:text-sm font-sans font-bold tracking-[0.22em] sm:tracking-[0.3em] uppercase pr-4">
           Saifeddine Lahmar
         </Link>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="text-accent hover:opacity-80 transition-all duration-300 transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-paper rounded-full"
-          aria-label={isOpen ? "Close menu" : "Open menu"}
-        >
-          {isOpen ? <X size={32} strokeWidth={1.5} /> : <Menu size={32} strokeWidth={1.5} />}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onSwitchFont}
+            className="px-3 py-1.5 border border-white/45 text-xs font-sans font-bold uppercase tracking-[0.18em] hover:border-accent hover:text-accent transition-colors"
+            aria-label="Switch portfolio font"
+          >
+            {activeLabel}
+          </button>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="text-accent hover:opacity-80 transition-all duration-300 transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-paper rounded-full"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+          >
+            {isOpen ? <X size={32} strokeWidth={1.5} /> : <Menu size={32} strokeWidth={1.5} />}
+          </button>
+        </div>
       </div>
 
       <motion.div
@@ -231,18 +250,18 @@ const Hero = () => {
 
 const Footer = () => (
   <footer className="site-shell p-6 lg:p-10 2xl:p-12 border-t border-line">
-    <div className="flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-sans font-bold uppercase tracking-widest text-muted">
+    <div className="flex flex-col md:flex-row justify-between items-center gap-8 text-xs sm:text-sm font-sans font-bold uppercase tracking-widest text-muted">
       <div className="flex gap-8">
-        <span className="opacity-40">Based in Chicago / Evanston</span>
+        <span className="opacity-80">Based in Chicago / Evanston</span>
       </div>
       <div>© 2026 Saifeddine Lahmar</div>
     </div>
   </footer>
 );
 
-const HomePage = () => (
+const HomePage = ({ activeFont, onSwitchFont }: { activeFont: FontKey; onSwitchFont: () => void }) => (
   <>
-    <Header />
+    <Header activeFont={activeFont} onSwitchFont={onSwitchFont} />
     <Hero />
 
     <main className="site-shell py-12 sm:py-14 lg:py-20 space-y-14 sm:space-y-18 lg:space-y-24">
@@ -357,6 +376,7 @@ export default function App() {
   const location = useLocation();
   const lenisRef = useRef<Lenis | null>(null);
   const [showSplash, setShowSplash] = useState(true);
+  const [activeFont, setActiveFont] = useState<FontKey>("default");
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -398,14 +418,22 @@ export default function App() {
     return () => window.clearTimeout(timeoutId);
   }, [location.pathname]);
 
+  const switchFont = () => {
+    setActiveFont((current) => {
+      const currentIndex = FONT_OPTIONS.findIndex((font) => font.key === current);
+      const nextIndex = (currentIndex + 1) % FONT_OPTIONS.length;
+      return FONT_OPTIONS[nextIndex].key;
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-paper text-ink selection:bg-accent selection:text-white relative">
+    <div className={`min-h-screen bg-paper text-ink selection:bg-accent selection:text-white relative ${FONT_OPTIONS.find((font) => font.key === activeFont)?.className ?? "font-theme-default"}`}>
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,56,39,0.08),transparent_36%),radial-gradient(circle_at_85%_90%,rgba(255,255,255,0.04),transparent_30%)]" />
       <SplashScreen visible={showSplash} />
       <div className="relative z-10">
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage activeFont={activeFont} onSwitchFont={switchFont} />} />
           <Route path="/creative-work" element={<CreativeWorkPage />} />
           <Route path="/journalism-work" element={<JournalismWorkPage />} />
           <Route path="/work-experience" element={<WorkExperiencePage />} />
