@@ -4,7 +4,7 @@ export interface Project {
   category: string;
   year: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   link?: string;
 }
 
@@ -21,30 +21,47 @@ export interface Experience {
 export const PROJECTS: Project[] = [
   {
     id: "harissa",
-    title: "Menghir Harisaa",
-    category: "Short Film",
-    year: "2024",
-    description: "A spicy film about a bland Tunisian. Written-Directed by Saifeddine Lahmar.",
+    title: "No Harissa — من غير هريسة",
+    category: "Award-winning fiction short film",
+    year: "15+ selections/awards",
+    description: "Born with a rare intolerance to spice in a community that treats spice as sacred, a teenager must choose between conforming to the norm or finding the courage to exist authentically. (Password: MHSF2025)",
     imageUrl: "https://i0.wp.com/culturecustodian.com/wp-content/uploads/2025/10/Still-3-scaled.png?resize=1024%2C572&ssl=1",
-    link: "https://www.instagram.com/menghir_harissa",
+    link: "https://vimeo.com/1110434806?share=copy",
   },
   {
-    id: "saif22",
-    title: "SAIF'22 Official Music Video",
-    category: "Music Video / Direction",
-    year: "2022",
-    description: "Invent To Implement - A pillar of the festival's audience engagement strategy. Director, cinematographer, and editor.",
-    imageUrl: "https://img.youtube.com/vi/mOq_UqBNM-I/maxresdefault.jpg",
-    link: "https://www.youtube.com/watch?v=mOq_UqBNM-I",
-  },
-  {
-    id: "ted-interview",
-    title: "Leadership through listening",
-    category: "Interview Series",
+    id: "screenwriting-workshops",
+    title: "Global Screenwriting Workshops",
+    category: "Education",
     year: "2024",
-    description: "Interview with Saifeddine Lahmar for TED-Ed Student Talks.",
-    imageUrl: "https://img.youtube.com/vi/barOSeHnRwo/maxresdefault.jpg",
-    link: "https://www.youtube.com/watch?v=barOSeHnRwo",
+    description: "Developed and facilitated eight free screenwriting workshops across South Africa, Tunisia, and the U.S., helping underrepresented storytellers turn ideas into structured stories ready for filming. Nine participants are advancing projects toward preproduction.",
+  },
+  {
+    id: "cut",
+    title: "CUT",
+    category: "Fiction short film",
+    year: "In post-production",
+    description: "In a world where people can choose which memories to keep and which to erase, a call center employee faces an impossible decision: delete the painful memory of his dementia-stricken mother forgetting who he is, or hold onto it as proof of their bond.",
+  },
+  {
+    id: "olive-tree",
+    title: "Under the Olive Tree",
+    category: "Fiction short film",
+    year: "In development",
+    description: "Set during the unrest of the Arab Spring in Tunisia, a young girl in the south searches for freedom during lockdown by making music with her friends beneath an olive tree.",
+  },
+  {
+    id: "female-escobar",
+    title: "The Female Escobar",
+    category: "Documentary short film",
+    year: "In production",
+    description: "After more than 20 years fighting gun violence and advocating for youth protection, Camiella Williams is finally recognized by public officials. But recognition alone may not be enough to solve the crisis she has spent her life confronting.",
+  },
+  {
+    id: "raw-takes",
+    title: "Raw Takes",
+    category: "Digital talk show",
+    year: "In Production",
+    description: "A digital talk show focused on entertainment education and access. Through conversations with industry professionals, Raw Takes demystifies the entertainment industry and equips emerging talent with the tools, language, and perspective to make stronger creative and career decisions.",
   }
 ];
 

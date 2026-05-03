@@ -1,42 +1,34 @@
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 
-const JOURNALISM_ITEMS = [
+const DESIGN_ITEMS = [
   {
-    id: "j1",
-    title: "Over the Rainbow Association Works to Build More Accessible Housing in Chicago",
-    outlet: "WTTW News",
-    year: "2026",
-    summary: "Reporting on the efforts of the Over the Rainbow Association to build accessible housing.",
-    href: "https://news.wttw.com/2026/04/14/over-rainbow-association-works-build-more-accessible-housing-chicago",
+    id: "d1",
+    title: "Graphic Design - Aspen Global Leadership Network",
+    category: "Graphic Design",
+    year: "2025",
+    summary: "Visual design and graphics for the Aspen Global Leadership Network.",
+    href: "https://www.instagram.com/p/DMYDp3MxPj2/?img_index=3&igsh=MWtvbnhuaWJ3MG4wNg==",
   },
   {
-    id: "j2",
+    id: "d2",
     title: "The AI Inclusion Imperative: What We Must Do Now",
-    outlet: "Aspen Institute",
+    category: "Web Design",
     year: "2025",
-    summary: "Exploring the urgent need for inclusion in the development and deployment of artificial intelligence.",
+    summary: "Web design for Aspen Institute article.",
     href: "https://www.aspeninstitute.org/blog-posts/the-ai-inclusion-imperative-what-we-must-do-now/",
   },
   {
-    id: "j3",
-    title: "How Juliet Asante’s Black Star International Film Festival Redefined Ghana’s Film Landscape",
-    outlet: "Aspen Institute",
+    id: "d3",
+    title: "Aspen Global Leadership Network",
+    category: "Web Design",
     year: "2025",
-    summary: "A look at ten years of vision and the impact of the Black Star International Film Festival.",
-    href: "https://www.aspeninstitute.org/blog-posts/ten-years-of-vision-how-juliet-asantes-black-star-international-film-festival-redefined-ghanas-film-landscape/",
-  },
-  {
-    id: "j4",
-    title: "Empowering Girls at Scale: Simi Nwogugu’s Vision for a Safer, Stronger Africa",
-    outlet: "Aspen Institute",
-    year: "2025",
-    summary: "Highlighting Simi Nwogugu's vision and work in empowering girls across the African continent.",
-    href: "https://www.aspeninstitute.org/blog-posts/empowering-girls-at-scale-simi-nwogugus-vision-for-a-safer-stronger-africa/",
+    summary: "Web design and platform updates for the Aspen Global Leadership Network.",
+    href: "https://www.aspeninstitute.org/programs/aspen-global-leadership-network/",
   },
 ];
 
-export default function JournalismWorkPage() {
+export default function DesignWorkPage() {
   return (
     <main className="site-shell min-h-screen pt-28 pb-16 space-y-10 lg:space-y-14">
       <div className="pb-8 border-b border-line/60 space-y-6">
@@ -45,12 +37,12 @@ export default function JournalismWorkPage() {
           <span>/</span>
           <Link to="/#work" className="hover:text-accent transition-colors">Work</Link>
           <span>/</span>
-          <span className="text-ink">Journalism Work</span>
+          <span className="text-ink">Design Work</span>
         </nav>
         <div>
           <p className="text-[10px] font-sans font-bold uppercase tracking-widest text-muted">Work Page</p>
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold uppercase tracking-tight">Journalism Work</h1>
-          <p className="text-sm font-sans italic text-ink/70 mt-3 max-w-xl">Reporting, interviews, and multimedia storytelling with editorial depth.</p>
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold uppercase tracking-tight">Design Work</h1>
+          <p className="text-sm font-sans italic text-ink/70 mt-3 max-w-xl">Graphic and web design for brands and organizations.</p>
         </div>
       </div>
 
@@ -60,7 +52,7 @@ export default function JournalismWorkPage() {
         animate={{ opacity: 1 }}
         transition={{ staggerChildren: 0.2, delayChildren: 0.1 }}
       >
-        {JOURNALISM_ITEMS.map((item) => (
+        {DESIGN_ITEMS.map((item) => (
           <motion.article 
             key={item.id} 
             className="border-b border-line/50 pb-8 lg:pb-12"
@@ -70,7 +62,7 @@ export default function JournalismWorkPage() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-sans font-bold uppercase tracking-widest text-muted mb-5">
-              <span>{item.outlet}</span>
+              <span>{item.category}</span>
               <span>{item.year}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-6xl font-serif font-bold uppercase tracking-[-0.03em] leading-tight lg:leading-[1.1] mb-4 break-words">{item.title}</h2>
@@ -82,7 +74,7 @@ export default function JournalismWorkPage() {
                 rel="noopener noreferrer"
                 className="text-xs font-sans font-bold uppercase tracking-widest text-accent border-b border-accent pb-1 hover:text-white transition-colors"
               >
-                View Story
+                View Work
               </a>
             )}
           </motion.article>

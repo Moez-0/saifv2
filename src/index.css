@@ -1,14 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Denton Text", "Denton", "Iowan Old Style", "Times New Roman", serif;
+  --font-serif: "Denton Text", "Denton", "Playfair Display", "Times New Roman", serif;
   
   --color-paper: #040404;
   --color-ink: #d9d3c6;
   --color-muted: #c0b8aa;
-  --color-line: #171717;
+  --color-line: #2a2a2a;
   --color-accent: #ff3827;
 }
 
@@ -115,7 +116,7 @@
 
 .font-theme-default {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Denton Text", "Denton", "Iowan Old Style", "Times New Roman", serif;
+  --font-serif: "Denton Text", "Denton", "Playfair Display", "Times New Roman", serif;
 }
 
 /* Hide scrollbar but keep functionality */
